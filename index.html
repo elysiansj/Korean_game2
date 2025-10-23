@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>한글 모음 학습 게임</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        
+        .score {
+            text-align: center;
+            font-size: 1.5em;
+            color: #764ba2;
+            margin-bottom: 20px;
+        }
+        
+        /* 1단계: 모음 인식 게임 */
+        #stage1 {
+            display: block;
+        }
+        
+        .image-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .quiz-image {
+            width: 200px;
+            height: 200px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 120px;
+            margin-bottom: 20px;
+        }
+        
+        .question {
+            font-size: 1.5em;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        
+        .vowel-buttons {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .vowel-btn {
+            padding: 20px;
+            font-size: 2em;
+            background: #f8f9fa;
+            border: 3px solid #dee2e6;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .vowel-btn:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+        
+        .vowel-btn.correct {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+        
+        .vowel-btn.wrong {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+            animation: shake 0.5s;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        /* 2단계: 따라쓰기 게임 */
+        #stage2 {
+            display: none;
+        }
+        
+        .write-instruction {
+            text-align: center;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .target-vowel {
+            text-align: center;
+            font-size: 5em;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        #drawCanvas {
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            cursor: crosshair;
+            background: white;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-clear {
+            background: #ffc107;
+            color: white;
+        }
+        
+        .btn-next {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .feedback {
+            text-align: center;
+            font-size: 2em;
+            margin-top: 20px;
+            min-height: 50px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 10px; color: #764ba2; font-size: 1.2em;">
+            휄로쉽한글학교 나비반 한글모음 게임
+        </div>
+        <div style="text-align: center; margin-bottom: 20px; color: #999; font-size: 0.9em;">
+            made by 이수정
+        </div>
+        <h1>🎮 한글 모음 게임</h1>
+        <div class="score">점수: <span id="score">0</span></div>
+        
+        <!-- 1단계: 모음 인식 게임 -->
+        <div id="stage1">
+            <div class="image-container">
+                <div class="quiz-image" id="quizImage">🍎</div>
+            </div>
+            <div class="question">이 그림은 어떤 모음으로 시작할까요?</div>
+            <div class="vowel-buttons" id="vowelButtons"></div>
+            <div class="feedback" id="feedback1"></div>
+        </div>
+        
+        <!-- 2단계: 따라쓰기 게임 -->
+        <div id="stage2">
+            <div class="write-instruction">모음을 따라 써보세요!</div>
+            <div class="target-vowel" id="targetVowel">ㅏ</div>
+            <div class="canvas-container">
+                <canvas id="drawCanvas" width="400" height="400"></canvas>
+            </div>
+            <div class="controls">
+                <button class="btn btn-clear" onclick="clearCanvas()">지우기</button>
+                <button class="btn btn-next" onclick="nextQuestion()">다음 문제</button>
+            </div>
+            <div class="feedback" id="feedback2"></div>
+        </div>
+    </div>
+
+    <script>
+        // 게임 데이터
+        const questions = [
+            { emoji: '🍎', word: '사과', vowel: 'ㅏ' },
+            { emoji: '🐘', word: '코끼리', vowel: 'ㅗ' },
+            { emoji: '🍌', word: '바나나', vowel: 'ㅏ' },
+            { emoji: '🐻', word: '곰', vowel: 'ㅗ' },
+            { emoji: '🎈', word: '풍선', vowel: 'ㅜ' },
+            { emoji: '🌙', word: '달', vowel: 'ㅏ' },
+            { emoji: '⭐', word: '별', vowel: 'ㅕ' },
+            { emoji: '🌺', word: '꽃', vowel: 'ㅗ' }
+        ];
+        
+        const vowels = ['ㅏ', 'ㅑ', 'ㅓ', 'ㅕ', 'ㅗ', 'ㅛ', 'ㅜ', 'ㅠ', 'ㅡ', 'ㅣ'];
+        
+        let currentQuestion = 0;
+        let score = 0;
+        let stage = 1;
+        
+        // 캔버스 설정
+        const canvas = document.getElementById('drawCanvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        
+        // 초기화
+        function init() {
+            createVowelButtons();
+            loadQuestion();
+            setupCanvas();
+        }
+        
+        // 모음 버튼 생성
+        function createVowelButtons() {
+            const container = document.getElementById('vowelButtons');
+            vowels.forEach(vowel => {
+                const btn = document.createElement('button');
+                btn.className = 'vowel-btn';
+                btn.textContent = vowel;
+                btn.onclick = () => checkAnswer(vowel, btn);
+                container.appendChild(btn);
+            });
+        }
+        
+        // 문제 로드
+        function loadQuestion() {
+            if (currentQuestion >= questions.length) {
+                currentQuestion = 0;
+            }
+            
+            const q = questions[currentQuestion];
+            document.getElementById('quizImage').textContent = q.emoji;
+            document.getElementById('feedback1').textContent = '';
+            
+            // 모든 버튼 초기화
+            document.querySelectorAll('.vowel-btn').forEach(btn => {
+                btn.className = 'vowel-btn';
+                btn.disabled = false;
+            });
+        }
+        
+        // 정답 확인
+        function checkAnswer(selected, btn) {
+            const correct = questions[currentQuestion].vowel;
+            
+            if (selected === correct) {
+                btn.classList.add('correct');
+                document.getElementById('feedback1').textContent = '🎉 정답입니다!';
+                document.getElementById('feedback1').style.color = '#28a745';
+                score += 10;
+                document.getElementById('score').textContent = score;
+                
+                // 모든 버튼 비활성화
+                document.querySelectorAll('.vowel-btn').forEach(b => b.disabled = true);
+                
+                // 2단계로 이동
+                setTimeout(() => {
+                    moveToStage2(correct);
+                }, 1500);
+            } else {
+                btn.classList.add('wrong');
+                document.getElementById('feedback1').textContent = '❌ 다시 생각해보세요!';
+                document.getElementById('feedback1').style.color = '#dc3545';
+                setTimeout(() => {
+                    btn.className = 'vowel-btn';
+                }, 500);
+            }
+        }
+        
+        // 2단계로 이동
+        function moveToStage2(vowel) {
+            document.getElementById('stage1').style.display = 'none';
+            document.getElementById('stage2').style.display = 'block';
+            document.getElementById('targetVowel').textContent = vowel;
+            document.getElementById('feedback2').textContent = '';
+            clearCanvas();
+        }
+        
+        // 캔버스 설정
+        function setupCanvas() {
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+            
+            // 터치 이벤트
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent('mousedown', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                canvas.dispatchEvent(mouseEvent);
+            });
+            
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent('mousemove', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                canvas.dispatchEvent(mouseEvent);
+            });
+            
+            canvas.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                const mouseEvent = new MouseEvent('mouseup', {});
+                canvas.dispatchEvent(mouseEvent);
+            });
+        }
+        
+        function startDrawing(e) {
+            isDrawing = true;
+            const rect = canvas.getBoundingClientRect();
+            ctx.beginPath();
+            ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+        }
+        
+        function draw(e) {
+            if (!isDrawing) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#667eea';
+            ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+            ctx.stroke();
+        }
+        
+        function stopDrawing() {
+            isDrawing = false;
+        }
+        
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        function nextQuestion() {
+            document.getElementById('feedback2').textContent = '👍 잘했어요!';
+            document.getElementById('feedback2').style.color = '#28a745';
+            score += 10;
+            document.getElementById('score').textContent = score;
+            
+            setTimeout(() => {
+                currentQuestion++;
+                document.getElementById('stage2').style.display = 'none';
+                document.getElementById('stage1').style.display = 'block';
+                loadQuestion();
+            }, 1000);
+        }
+        
+        // 게임 시작
+        init();
+    </script>
+</body>
+</html>
