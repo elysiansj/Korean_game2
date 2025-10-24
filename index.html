@@ -291,6 +291,15 @@
     <script>
         // 게임 데이터
         const questions = [
+            { emoji: '👶', word: '아이', vowel: 'ㅏ' },
+            { emoji: '⚾', word: '야구', vowel: 'ㅑ' },
+            { emoji: '🦊', word: '여우', vowel: 'ㅕ' },
+            { emoji: '🥒', word: '오이', vowel: 'ㅗ' },
+            { emoji: '🪀', word: '요요', vowel: 'ㅛ' },
+            { emoji: '🍼', word: '우유', vowel: 'ㅜ' },
+            { emoji: '👻', word: '유령', vowel: 'ㅠ' },
+            { emoji: '🥤', word: '음료', vowel: 'ㅡ' },
+            { emoji: '🦷', word: '이빨', vowel: 'ㅣ' },
             { emoji: '🍎', word: '사과', vowel: 'ㅏ' },
             { emoji: '🐘', word: '코끼리', vowel: 'ㅗ' },
             { emoji: '🍌', word: '바나나', vowel: 'ㅏ' },
@@ -298,7 +307,7 @@
             { emoji: '🎈', word: '풍선', vowel: 'ㅜ' },
             { emoji: '🌙', word: '달', vowel: 'ㅏ' },
             { emoji: '⭐', word: '별', vowel: 'ㅕ' },
-            { emoji: '🌺', word: '꽃', vowel: 'ㅗ' }
+            { emoji: '💐', word: '꽃', vowel: 'ㅗ' }
         ];
         
         const vowels = ['ㅏ', 'ㅑ', 'ㅓ', 'ㅕ', 'ㅗ', 'ㅛ', 'ㅜ', 'ㅠ', 'ㅡ', 'ㅣ'];
@@ -306,6 +315,17 @@
         let currentQuestion = 0;
         let score = 0;
         let stage = 1;
+        let shuffledQuestions = [];
+        
+        // 문제 섞기 함수
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
         
         // 캔버스 설정
         const canvas = document.getElementById('drawCanvas');
@@ -322,6 +342,7 @@
         
         // 초기화
         function init() {
+            shuffledQuestions = shuffleArray(questions);
             createVowelButtons();
             loadQuestion();
             resizeCanvas();
@@ -345,11 +366,12 @@
         
         // 문제 로드
         function loadQuestion() {
-            if (currentQuestion >= questions.length) {
+            if (currentQuestion >= shuffledQuestions.length) {
                 currentQuestion = 0;
+                shuffledQuestions = shuffleArray(questions);
             }
             
-            const q = questions[currentQuestion];
+            const q = shuffledQuestions[currentQuestion];
             document.getElementById('quizImage').textContent = q.emoji;
             document.getElementById('feedback1').textContent = '';
             
@@ -362,7 +384,7 @@
         
         // 정답 확인
         function checkAnswer(selected, btn) {
-            const correct = questions[currentQuestion].vowel;
+            const correct = shuffledQuestions[currentQuestion].vowel;
             
             if (selected === correct) {
                 btn.classList.add('correct');
